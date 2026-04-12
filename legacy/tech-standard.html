@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TBA Tech · Ruta del Día</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#020617">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="tech-body">
+
+    <!-- Loading State -->
+    <div class="full-loader" id="full-loader">
+        <div class="loader-ring"></div>
+        <p>Cargando ruta...</p>
+    </div>
+
+    <!-- App Container -->
+    <div class="tech-app" id="tech-app" style="display:none;">
+        
+        <!-- Header -->
+        <header class="tech-header">
+            <div class="tech-header-left">
+                <p class="tech-date" id="tech-date"></p>
+                <div class="tech-profile">
+                    <div class="tech-avatar" id="tech-avatar"></div>
+                    <h2 id="tech-greeting">Hola, Técnico</h2>
+                </div>
+            </div>
+            <button class="btn-icon" id="btn-logout" title="Cerrar Sesión">
+                <i data-lucide="log-out"></i>
+            </button>
+        </header>
+
+        <!-- Progress Bar -->
+        <div class="progress-section">
+            <div class="progress-label">
+                <span>Progreso del día</span>
+                <span id="progress-text">0 / 0</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+        </div>
+
+        <!-- Lista de Rutas -->
+        <div class="route-list" id="route-list">
+            <!-- Tarjetas generadas dinámicamente desde Firestore -->
+        </div>
+
+    </div>
+
+    <!-- Modal de Reporte -->
+    <div class="modal-overlay" id="report-modal">
+        <div class="modal-sheet">
+            <div class="modal-handle"></div>
+            <div class="modal-head">
+                <div>
+                    <h3 id="modal-pool-name">Alberca</h3>
+                    <p id="modal-pool-detail" class="text-muted"></p>
+                </div>
+                <button class="btn-close-modal" id="btn-close-report"><i data-lucide="x"></i></button>
+            </div>
+
+            <!-- Timer del Check-in -->
+            <div class="checkin-timer-display" id="checkin-timer-display" style="display:none;">
+                <div class="timer-icon-wrap"><i data-lucide="clock"></i></div>
+                <div>
+                    <p class="timer-label">Tiempo en sitio</p>
+                    <p class="timer-value" id="timer-value">00:00</p>
+                </div>
+            </div>
+
+            <form id="report-form">
+                <input type="hidden" id="report-pool-id">
+                <input type="hidden" id="report-checkin-id">
+                
+                <div class="form-group">
+                    <label>Nivel de pH</label>
+                    <div class="range-control">
+                        <input type="range" id="inp-ph" min="6.0" max="9.0" step="0.1" value="7.4">
+                        <div class="range-value" id="val-ph">7.4</div>
+                    </div>
+                    <div class="range-labels"><span>6.0 (Ácido)</span><span>7.4 (Ideal)</span><span>9.0 (Básico)</span></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Nivel de Cloro (ppm)</label>
+                    <div class="range-control">
+                        <input type="range" id="inp-cl" min="0.0" max="5.0" step="0.1" value="1.5">
+                        <div class="range-value" id="val-cl">1.5</div>
+                    </div>
+                    <div class="range-labels"><span>0.0</span><span>1.5 (Ideal)</span><span>5.0</span></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Insumo Aplicado</label>
+                    <select id="inp-insumo">
+                        <option value="Ninguno">Ninguno</option>
+                        <option value="Cloro en Pastilla">Cloro en Pastilla</option>
+                        <option value="Tricloro Granulado">Tricloro Granulado</option>
+                        <option value="Ácido Muriático">Ácido Muriático</option>
+                        <option value="Clarificante">Clarificante</option>
+                        <option value="Antialgas">Antialgas</option>
+                        <option value="Pastilla Triple Acción">Pastilla Triple Acción</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Cantidad Aplicada</label>
+                    <div class="form-row-inline">
+                        <input type="number" id="inp-qty" placeholder="Ej: 2" min="0" step="0.5" value="0">
+                        <select id="inp-qty-unit">
+                            <option value="pastillas">Pastillas</option>
+                            <option value="kg">Kg</option>
+                            <option value="litros">Litros</option>
+                            <option value="gramos">Gramos</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group alert-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="inp-alert">
+                        <span class="checkbox-custom"></span>
+                        ⚠️ Reportar Falla Crítica
+                    </label>
+                </div>
+
+                <div class="form-group alert-detail" id="alert-detail" style="display:none;">
+                    <label>Tipo de Falla</label>
+                    <select id="inp-alert-type">
+                        <option value="Bomba hace ruido">Bomba hace ruido</option>
+                        <option value="Filtro tapado">Filtro tapado</option>
+                        <option value="Fuga detectada">Fuga detectada</option>
+                        <option value="Válvula rota">Válvula rota</option>
+                        <option value="Motor quemado">Motor quemado</option>
+                        <option value="Agua verde/turbia">Agua verde/turbia</option>
+                        <option value="Otro">Otro</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Notas del Servicio</label>
+                    <textarea id="inp-notes" rows="2" placeholder="Agua limpia, servicio rutinario..."></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-submit">
+                        <i data-lucide="cloud-upload"></i>
+                        <span>Finalizar Servicio (Check-out)</span>
+                    </button>
+                    <button type="button" class="btn-wa" id="btn-send-wa" style="display:none;">
+                        <i data-lucide="message-circle"></i>
+                        <span>Enviar Evidencia por WA</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">
+        <i data-lucide="check-circle-2"></i>
+        <span id="toast-msg">Guardado</span>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/tech-app.js"></script>
+</body>
+</html>

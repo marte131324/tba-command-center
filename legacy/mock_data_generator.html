@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Entorno de Pruebas (Data Demo)</title>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+
+    <!-- Configuración principal -->
+    <script src="js/firebase-config.js"></script>
+
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0A0A0A; color: white; display:flex; justify-content:center; align-items:center; min-height:100vh; margin:0;}
+        .card { background: #1A1A1A; padding: 40px; border-radius: 12px; border: 1px solid #333; text-align: center; max-width: 500px;}
+        h1 { margin-top: 0; color: #4facfe; }
+        p { color: #888; line-height: 1.5; margin-bottom: 30px;}
+        .btn { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; border: none; padding: 15px 30px; font-size: 16px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: transform 0.2s;}
+        .btn:hover { transform: translateY(-2px); }
+        .log-box { margin-top: 20px; text-align: left; background: #000; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 12px; color: #0f0; max-height: 200px; overflow-y: auto; display: none;}
+        .success { color: #00ff00; }
+        .error { color: #ff0000; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1>Inyector de Datos Demo</h1>
+    <p>Este script insertará en la cuenta de Firebase: <b>50 algoritmos de Técnicos PWA</b>, <b>300 perfiles de Albercas</b> y <b>150 Reportes de Check-in</b> para que la demostración con el cliente tenga datos masivos reales.</p>
+    <button class="btn" id="start-btn">Inyectar Data para Demo 🚀</button>
+    <div class="log-box" id="log-box"></div>
+</div>
+
+<script>
+    const logBox = document.getElementById('log-box');
+    const dbInst = firebase.firestore();
+
+    function logMessage(msg, type='info') {
+        logBox.style.display = 'block';
+        const p = document.createElement('div');
+        p.innerText = `> ${msg}`;
+        p.classList.add(type);
+        logBox.appendChild(p);
+        logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    const firstNames = ["Juan", "Roberto", "Carlos", "Miguel", "Luis", "Pedro", "Salvador", "Ricardo", "Eduardo", "Hugo", "Mario", "José", "Alejandro", "Emanuel", "Gabriel", "Jorge", "Victor", "Erick"];
+    const lastNames = ["García", "López", "Martínez", "Rodríguez", "Hernández", "Pérez", "Sánchez", "Romero", "Cruz", "Gómez", "Flores", "Morales", "Ortiz", "Gutiérrez", "Ramírez"];
+    const routesArray = ["Ruta Norte 1", "Ruta Norte 2", "Ruta Sur 1", "Ruta Sur 2", "Ruta Centro", "Ruta Boca del Río", "Ruta Riviera", "Ruta VIP"];
+    const filters = ["MAXFIL-250", "MAXFIL-500", "Filtro de Arena 19", "Filtro de Cartucho CX"];
+    
+    // Arrays para Reportes
+    const chemicals = ["Cloro Pastilla (2kg)", "Dicloro (500g)", "Ácido Muriático (1L)", "Antialgas (250ml)", "Clarificante (100ml)", "Ninguno"];
+    const statuses = ["success", "success", "success", "success", "warning", "danger"];
+
+    function randomChoice(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+    function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+    document.getElementById('start-btn').addEventListener('click', async () => {
+        const btn = document.getElementById('start-btn');
+        btn.disabled = true;
+        btn.innerText = 'Cargando datos...';
+        
+        try {
+            logMessage('Generando 50 Técnicos...');
+            const techUids = [];
+            let batch = dbInst.batch();
+            
+            for(let i=0; i<50; i++) {
+                const docRef = dbInst.collection('users').doc();
+                const name = `${randomChoice(firstNames)} ${randomChoice(lastNames)}`;
+                techUids.push({id: docRef.id, name: name, route: randomChoice(routesArray)});
+                batch.set(docRef, {
+                    name: name,
+                    email: `tecnico${i+1}@tba.com`,
+                    route: techUids[i].route,
+                    role: 'tech',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                if(i % 40 === 0 && i !== 0) {
+                    await batch.commit();
+                    batch = dbInst.batch();
+                }
+            }
+            await batch.commit();
+            logMessage('✅ 50 Técnicos inyectados con éxito', 'success');
+
+            logMessage('Generando 300 Albercas de Servicio...');
+            batch = dbInst.batch();
+            const poolIds = [];
+            for(let i=0; i<300; i++) {
+                const docRef = dbInst.collection('pools').doc();
+                poolIds.push(docRef.id);
+                batch.set(docRef, {
+                    name: `Alberca Residencial ${randomChoice(["Lomas", "Brisas", "Costa", "Joya", "Palmas"])} #${randomInt(10, 999)}`,
+                    route: randomChoice(routesArray),
+                    filterType: randomChoice(filters),
+                    volume: randomInt(15, 80) * 1000, // 15k a 80k litros
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                if(i % 100 === 0 && i !== 0) {
+                    await batch.commit();
+                    batch = dbInst.batch();
+                }
+            }
+            await batch.commit();
+            logMessage('✅ 300 Albercas inyectadas con éxito', 'success');
+
+            logMessage('Generando 120 Reportes diarios de mantenimiento...');
+            batch = dbInst.batch();
+            for(let i=0; i<120; i++) {
+                const docRef = dbInst.collection('reports').doc();
+                const tech = randomChoice(techUids);
+                const status = randomChoice(statuses);
+                
+                // Múltiples fechas simuladas de ayer y hoy
+                const date = new Date();
+                date.setDate(date.getDate() - randomInt(0, 2)); 
+                date.setHours(randomInt(8, 17), randomInt(0, 59), 0);
+                
+                batch.set(docRef, {
+                    techId: tech.id,
+                    techName: tech.name,
+                    poolName: `Alberca Visitada #${randomInt(10, 500)}`,
+                    route: tech.route,
+                    phLevel: (Math.random() * (7.8 - 6.8) + 6.8).toFixed(1), // ph entre 6.8 y 7.8
+                    chlorineLevel: (Math.random() * (4 - 1.5) + 1.5).toFixed(1), // cloro entre 1.5 y 4
+                    chemicalUsed: randomChoice(chemicals),
+                    status: status,
+                    issueDesc: status === 'danger' ? 'Bomba hace ruido extraño severo' : (status === 'warning' ? 'Agua un poco turbia' : ''),
+                    photoUrl: 'https://via.placeholder.com/300x200?text=Evidencia+Simulada',
+                    createdAt: firestoreTimestampSafeguard(date)
+                });
+                
+                if(i % 100 === 0 && i !== 0) {
+                    await batch.commit();
+                    batch = dbInst.batch();
+                }
+            }
+            await batch.commit();
+            logMessage('✅ 120 Reportes y alertas operativas inyectadas', 'success');
+
+            logMessage('🎉 INYECCIÓN FINALIZADA PERFECTAMENTE. YA PUEDES CERRAR ESTO Y ABRIR EL ADMIN.', 'success');
+            btn.innerText = 'Inyección Terminada';
+        } catch (error) {
+            logMessage('ERROR CRÍTICO: ' + error.message, 'error');
+            console.error(error);
+            btn.innerText = 'Error - Mira la consola';
+        }
+    });
+
+    function firestoreTimestampSafeguard(dateObj) {
+        return firebase.firestore.Timestamp.fromDate(dateObj);
+    }
+</script>
+</body>
+</html>

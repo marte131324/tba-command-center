@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Rescate de Emergencia</title>
+    <style>
+        body { background: #0f172a; color: white; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .card { background: #1e293b; padding: 40px; border-radius: 12px; text-align: center; }
+        button { background: #4facfe; color: black; border: none; padding: 15px 30px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Modo de Rescate Maestro</h2>
+        <p>Se creará un administrador con acceso global:</p>
+        <p><strong>Email:</strong> admin@tbamaster.com<br><strong>Pass:</strong> tba2026</p>
+        <button id="btn-rescue">AQUÍ PARA ENTRAR</button>
+        <p id="msg" style="color: yellow; margin-top: 20px;"></p>
+    </div>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="js/firebase-config.js"></script>
+
+    <script>
+        document.getElementById('btn-rescue').addEventListener('click', async () => {
+            const msg = document.getElementById('msg');
+            msg.innerText = 'Forzando sistema...';
+            try {
+                // 1. Try to create the user
+                let cred;
+                try {
+                    cred = await auth.createUserWithEmailAndPassword('admin@tbamaster.com', 'tba2026');
+                } catch (e) {
+                    if (e.code === 'auth/email-already-in-use') {
+                        // if exists, login
+                        cred = await auth.signInWithEmailAndPassword('admin@tbamaster.com', 'tba2026');
+                    } else {
+                        throw e;
+                    }
+                }
+
+                // 2. Force admin role in firestore
+                msg.innerText = 'Reescribiendo servidor de base de datos...';
+                await db.collection('users').doc(cred.user.uid).set({
+                    name: "Admin Maestro",
+                    email: "admin@tbamaster.com",
+                    role: "admin",
+                    route: "Global",
+                    createdAt: new Date()
+                });
+
+                msg.innerText = '¡Logrado! Redirigiendo...';
+                setTimeout(() => {
+                    window.location.href = 'admin.html';
+                }, 1000);
+
+            } catch (err) {
+                msg.innerText = 'Error crítico: ' + err.message;
+            }
+        });
+    </script>
+</body>
+</html>

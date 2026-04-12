@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TBA Tech · Ruta del Día</title>
+    <link rel="stylesheet" href="css/style.css?v=2">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#000000">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .pulse-tech { animation: pulse-tech 1.5s infinite alternate; }
+        @keyframes pulse-tech { from { filter: drop-shadow(0 0 2px #4facfe); } to { filter: drop-shadow(0 0 10px #00f2fe); } }
+        .header-glass {
+            backdrop-filter: blur(15px);
+            background: rgba(15, 23, 42, 0.85);
+            border-bottom: 1px solid rgba(79, 172, 254, 0.2);
+            position: sticky; top: 0; z-index: 100;
+        }
+    </style>
+</head>
+<body class="tech-body">
+
+    <!-- Loading State PREMIUM -->
+    <div class="full-loader" id="full-loader" style="background:#000; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+        <img src="img/logo-cce.png" class="pulse-tech" style="width:180px; height:auto; margin-bottom:15px;">
+        <div style="width:30px; height:30px; border:2px solid transparent; border-top-color:#4facfe; border-radius:50%; animation: spin 1s linear infinite;"></div>
+        <p style="margin-top:15px; color:#4facfe; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:2px;">Iniciando Terminal de Campo</p>
+    </div>
+
+    <!-- App Container -->
+    <div class="tech-app" id="tech-app" style="display:none;">
+        
+        <!-- Header -->
+        <!-- Header -->
+        <header class="tech-header header-glass" style="display:flex; justify-content:space-between; align-items:center; padding:15px; margin-bottom:10px;">
+            <div class="tech-header-left" style="display:flex; flex-direction:column; gap:4px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <p class="tech-date" id="tech-date" style="color:#4facfe; font-size:10px; text-transform:uppercase; font-weight:800; letter-spacing:1px; margin:0;"></p>
+                </div>
+                <div class="tech-profile" style="display:flex; align-items:center; gap:10px;">
+                    <div class="tech-avatar" id="tech-avatar" style="width:36px; height:36px; background:linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:#000; font-weight:800; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px;">T</div>
+                    <h2 id="tech-greeting" style="font-size:16px; font-weight:700; margin:0; color:#f8fafc;">Hola, Técnico</h2>
+                </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px;">
+                <img src="img/logo-cce.png" style="height:30px; width:auto; filter: drop-shadow(0 0 5px rgba(79,172,254,0.3));" alt="CCE Pro">
+                <button class="btn-icon" id="btn-logout" title="Cerrar Sesión" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:8px; width:36px; height:36px; display:flex; align-items:center; justify-content:center; color:#94a3b8;">
+                    <i data-lucide="log-out" style="width:16px;"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- BANNER DE ALERTAS / TAREAS (Oculto por defecto) -->
+        <div id="tech-task-banner" style="display:none; background: #ef4444; color: white; margin: 15px 20px 0; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);">
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+                <i data-lucide="bell-ring" style="width:20px;height:20px;"></i>
+                <h4 style="margin:0; font-weight:700;">Mensaje de Central</h4>
+            </div>
+            <p id="tech-task-text" style="font-size:14px; margin-bottom:10px; line-height:1.4;">[Texto de la tarea]</p>
+            <button id="btn-open-task-modal" class="btn-secondary" style="width:100%; border:none; background:rgba(255,255,255,0.2); color:white; font-weight:600;"><i data-lucide="maximize-2"></i> Desplegar Tarea</button>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-section">
+            <div class="progress-label">
+                <span>Progreso Operativo</span>
+                <span id="progress-text">0 / 0</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+        </div>
+
+        <!-- Lista de Rutas -->
+        <div class="route-list" id="route-list">
+            <!-- Tarjetas generadas dinámicamente desde Firestore -->
+        </div>
+
+        <!-- Botón Descargar Reporte del Día -->
+        <button class="btn-download-daily" id="btn-download-daily" style="display:none; margin:20px; background: rgba(79,172,254,0.1); border:1px solid rgba(79,172,254,0.3); color:#4facfe; padding:15px; border-radius:12px; font-weight:600; width:calc(100% - 40px);">
+            <i data-lucide="download"></i> Descargar Reporte (Excel)
+        </button>
+
+    </div>
+
+    <!-- Modal Historial Clínico -->
+    <div class="modal-overlay" id="history-modal">
+        <div class="modal-sheet">
+            <div class="modal-handle"></div>
+            <div class="modal-head">
+                <div><h3 id="history-pool-name">Historial</h3><p class="text-muted">Últimos 5 registros</p></div>
+                <button class="btn-close-modal" id="btn-close-history"><i data-lucide="x"></i></button>
+            </div>
+            <div style="height:180px;"><canvas id="historyChart"></canvas></div>
+            <div id="history-list" style="margin-top:15px;"></div>
+        </div>
+    </div>
+
+    <!-- Modal de Reporte -->
+    <div class="modal-overlay" id="report-modal">
+        <div class="modal-sheet" style="max-height: 90vh; overflow-y: auto;">
+            <div class="modal-handle"></div>
+            <div class="modal-head">
+                <div><h3 id="modal-pool-name">Alberca</h3><p id="modal-pool-detail" class="text-muted"></p></div>
+                <button class="btn-close-modal" id="btn-close-report"><i data-lucide="x"></i></button>
+            </div>
+            
+            <form id="report-form">
+                <input type="hidden" id="report-pool-id"><input type="hidden" id="report-checkin-id">
+
+                <!-- TIMER -->
+                <div id="checkin-timer-display" style="display:none; align-items:center; justify-content:center; gap:8px; background:rgba(79,172,254,0.1); padding:10px; border-radius:10px; margin-bottom:20px; color:#4facfe; font-weight:800;">
+                    <i data-lucide="timer"></i> <span id="timer-value">00:00</span>
+                </div>
+
+                <!-- CHECKLIST PREVISUAL -->
+                <div class="checklist-section" style="margin-bottom:25px;">
+                    <p style="font-weight:700; color:#fff; font-size:13px; margin-bottom:10px;">Inspección Pre-Servicio</p>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                        <label class="check-pill"><input type="checkbox" class="chk-pre" value="Filtro Limpio"> Filtro OK</label>
+                        <label class="check-pill"><input type="checkbox" class="chk-pre" value="Sin Fugas"> Sin Fugas</label>
+                        <label class="check-pill"><input type="checkbox" class="chk-pre" value="Skimmer OK"> Skimmer</label>
+                        <label class="check-pill"><input type="checkbox" class="chk-pre" value="Bomba OK"> Bomba</label>
+                        <label class="check-pill"><input type="checkbox" class="chk-pre" value="Entorno Limpio"> Entorno</label>
+                    </div>
+                    <p id="checklist-warning" style="color:#ef4444; font-size:11px; margin-top:5px; display:none;">⚠️ Completa todos los puntos.</p>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group"><label>pH actual</label><input type="range" id="inp-ph" min="6.0" max="8.5" step="0.1" value="7.4"><span id="val-ph" class="range-val">7.4</span></div>
+                    <div class="form-group"><label>Cloro (ppm)</label><input type="range" id="inp-cl" min="0.0" max="5.0" step="0.1" value="1.5"><span id="val-cl" class="range-val">1.5</span></div>
+                </div>
+
+                <div class="form-group"><label>Insumo Utilizado</label><select id="inp-insumo"><option>Ninguno</option><option>Cloro Triple Acción</option><option>Alguicida</option><option>Clarificante</option><option>Bicarbonato</option><option>Ácido Clorhídrico</option></select></div>
+                <div class="form-row"><div class="form-group"><label>Cantidad</label><input type="number" id="inp-qty" value="0" step="0.1"></div><div class="form-group"><label>Unidad</label><select id="inp-qty-unit"><option>Kg</option><option>Litros</option><option>Pastillas</option></select></div></div>
+
+                <!-- FOTO ELIMINADA -->
+
+                <div class="form-group"><label><input type="checkbox" id="inp-alert"> 🚨 Reportar Anomalía Grave</label></div>
+                <div id="alert-detail" style="display:none;"><div class="form-group"><label>Tipo de Falla</label><select id="inp-alert-type"><option>Falla en Bomba</option><option>Fuga Detectada</option><option>Agua Turbia/Verde</option><option>Falta de Insumos</option><option>Otro</option></select></div></div>
+
+                <div class="form-group"><label>Notas adicionales</label><textarea id="inp-notes" rows="2"></textarea></div>
+
+                <button type="submit" class="btn-primary-full">Finalizar Servicio</button>
+                <button type="button" id="btn-send-wa" class="btn-wa" style="display:none; margin-top:10px;"><i data-lucide="message-circle"></i> Enviar Reporte WA</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Tarea Detalle -->
+    <div class="modal-overlay" id="task-detail-modal">
+        <div class="modal-sheet">
+            <div class="modal-handle"></div>
+            <div class="modal-head"><div><h3>Nueva Instrucción</h3><p class="text-muted">Despachado desde CCE</p></div><button class="btn-close-modal" id="btn-close-task-modal"><i data-lucide="x"></i></button></div>
+            <p id="task-modal-text" style="font-size:16px; font-weight:600; line-height:1.5; padding:15px; background:rgba(255,255,255,0.05); border-radius:12px; margin:10px 0;">[Texto]</p>
+            <div class="form-group"><label>Nota de resolución</label><textarea id="task-modal-note" placeholder="Ej: Entregado al cliente."></textarea></div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                <button id="btn-resolve-task" class="btn-primary-full" style="background:#10b981;">Resuleto</button>
+                <button id="btn-reject-task" class="btn-primary-full" style="background:#ef4444;">No se pudo</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast" style="position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(100px);background:rgba(15,23,42,0.95);backdrop-filter:blur(15px);border:1px solid rgba(79,172,254,0.3);color:#e2e8f0;padding:14px 28px;border-radius:12px;font-size:13px;font-family:'Inter',sans-serif;font-weight:600;z-index:99999;display:flex;align-items:center;gap:10px;box-shadow:0 10px 30px rgba(0,0,0,0.4);transition:transform 0.4s cubic-bezier(0.22,1,0.36,1),opacity 0.4s;opacity:0;pointer-events:none;">
+        <i data-lucide="check-circle-2" style="width:18px;height:18px;color:#4facfe;"></i>
+        <span id="toast-msg">Guardado</span>
+    </div>
+    <style>.toast.show{transform:translateX(-50%) translateY(0)!important;opacity:1!important;pointer-events:auto;}</style>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/tech-app.js"></script>
+</body>
+</html>

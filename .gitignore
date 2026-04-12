@@ -1,0 +1,6 @@
+.DS_Store
+*.py
+*.log
+*.pdf
+node_modules/
+.env

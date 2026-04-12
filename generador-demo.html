@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TBA · Generador Demo Riviera Veracruzana</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <style>
+        body { background: #020617; color: #fff; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .setup-card { background: #0f172a; border: 1px solid #1e293b; padding: 40px; border-radius: 16px; max-width: 600px; width: 90%; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+        .setup-logo { display: inline-flex; padding: 12px; background: rgba(14, 165, 233, 0.1); border-radius: 12px; color: #0ea5e9; margin-bottom: 20px; }
+        h1 { font-weight: 800; margin: 0; font-size: 24px; color: #f1f5f9; }
+        p { color: #94a3b8; line-height: 1.6; margin: 15px 0 30px; }
+        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 30px; }
+        .btn-setup { padding: 14px; border-radius: 10px; border: none; font-weight: 600; cursor: pointer; transition: all 0.2s; font-size: 14px; }
+        .btn-primary { background: #0ea5e9; color: white; }
+        .btn-primary:hover { background: #0284c7; transform: translateY(-2px); }
+        .btn-danger { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
+        .btn-danger:hover { background: #ef4444; color: white; }
+        .log-box { background: #020617; border: 1px solid #1e293b; border-radius: 8px; padding: 15px; text-align: left; font-family: monospace; font-size: 11px; color: #22c55e; max-height: 200px; overflow-y: auto; display: none; }
+        .log-box div { margin-bottom: 4px; }
+        .log-box .err { color: #ef4444; }
+        .log-box .info { color: #94a3b8; }
+    </style>
+</head>
+<body>
+
+    <div class="setup-card">
+        <div class="setup-logo">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <h1>Inyector de Datos: Riviera Veracruzana</h1>
+        <p>Este script preparará el entorno de demostración premium. 
+           Limpiará la base de datos actual y cargará <b>30 albercas exclusivas</b>, <b>15 técnicos</b> y <b>50 reportes</b> simulados en la zona residencial de la Riviera.</p>
+
+        <div class="controls">
+            <button class="btn-setup btn-danger" id="btn-clear">Limpiar Base de Datos</button>
+            <button class="btn-setup btn-primary" id="btn-inject">Cargar Demo Riviera</button>
+        </div>
+
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #1e293b; text-align: left;">
+            <h2 style="font-size: 16px; color: #0ea5e9; margin-bottom: 15px;">Crear Administrador Maestro (Login Real)</h2>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <input type="email" id="admin-email" placeholder="Correo del Admin" style="padding: 12px; border-radius: 8px; border: 1px solid #1e293b; background: #020617; color: white;">
+                <input type="password" id="admin-pass" placeholder="Contraseña (min. 6)" style="padding: 12px; border-radius: 8px; border: 1px solid #1e293b; background: #020617; color: white;">
+                <button class="btn-setup btn-primary" id="btn-create-admin" style="width: 100%;">Registrar y Sincronizar Admin</button>
+            </div>
+        </div>
+
+        <div class="log-box" id="log-box"></div>
+    </div>
+
+    <script>
+        const logBox = document.getElementById('log-box');
+        
+        function log(msg, type='success') {
+            logBox.style.display = 'block';
+            const div = document.createElement('div');
+            div.className = type;
+            div.textContent = `> ${msg}`;
+            logBox.appendChild(div);
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        // --- LÓGICA DE ADMIN REAL ---
+        document.getElementById('btn-create-admin').addEventListener('click', async () => {
+            const email = document.getElementById('admin-email').value;
+            const pass = document.getElementById('admin-pass').value;
+            if(!email || pass.length < 6) { alert('Datos inválidos'); return; }
+
+            try {
+                log(`Intentando registrar admin: ${email}...`, 'info');
+                // Intentar crear usuario en Auth
+                const cred = await firebase.auth().createUserWithEmailAndPassword(email, pass);
+                const uid = cred.user.uid;
+
+                // Crear documento en Firestore vinculado al UID
+                await firebase.firestore().collection('users').doc(uid).set({
+                    name: "Admin Maestro",
+                    email: email,
+                    role: 'admin',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                log('🎉 ADMIN CREADO Y VINCULADO EXITOSAMENTE.', 'success');
+                log('Ya puedes ir a index.html y loguearte.', 'info');
+            } catch (e) {
+                if(e.code === 'auth/email-already-in-use') {
+                    log('El email ya existe en Auth. Intentando RE-VINCULAR en Firestore...', 'info');
+                    // Como no tenemos el UID aquí (es cliente), informamos que use uno nuevo o se loguee
+                    log('⚠️ El usuario ya existe en Firebase Auth.', 'info');
+                    log('Si ya conoces la contraseña, el sistema intentará validarte al entrar.', 'info');
+                    log('RECOMENDACIÓN: Usa un email nuevo para una prueba 100% limpia.', 'info');
+                } else {
+                    log('Error: ' + e.message, 'err');
+                }
+            }
+        });
+
+        const residenciales = [
+            "Lomas del Sol", "Punta Tiburón", "El Conchal", "Playas del Conchal", 
+            "Residencial Mandara", "Fracc. La Joya", "Real del Mar", "Marina Alta", 
+            "Grand Venezia", "Costa Diamante", "Sabalo Residencial", "El Estero"
+        ];
+
+        const nombres = ["Juan Pérez", "Roberto Soto", "Carlos Martínez", "Miguel Ángel Ruiz", "Luis Fernando G.", "Pedro Infante", "Salvador Dalí", "Javier López"];
+        const rutas = ["Riviera VIP", "Riviera Norte", "Riviera Sur", "Conchal - Punta", "Mandinga - Estero"];
+        const filtros = ["MAXFIL-250", "MAXFIL-500", "Cartucho Pentair", "Arena Hayward G-20"];
+
+        async function deleteAllDocuments(collectionName) {
+            log(`Limpiando colección: ${collectionName}...`, 'info');
+            const snap = await db.collection(collectionName).get();
+            if (snap.empty) return;
+            const batch = db.batch();
+            snap.forEach(doc => batch.delete(doc.ref));
+            await batch.commit();
+            log(`✅ ${collectionName} vaciada.`);
+        }
+
+        document.getElementById('btn-clear').addEventListener('click', async () => {
+            if(!confirm('¿Estás seguro de borrar TODA la base de datos para empezar de cero?')) return;
+            try {
+                await deleteAllDocuments('reports');
+                await deleteAllDocuments('pools');
+                await deleteAllDocuments('users');
+                await deleteAllDocuments('checkins');
+                await deleteAllDocuments('tasks');
+                log('🎉 BASE DE DATOS LIMPIA. LISTA PARA INYECTAR.', 'info');
+            } catch (e) { log('Error: ' + e.message, 'err'); }
+        });
+
+        document.getElementById('btn-inject').addEventListener('click', async () => {
+            const btn = document.getElementById('btn-inject');
+            btn.disabled = true;
+            btn.innerText = 'Cargando...';
+
+            try {
+                log('Creando 10 técnicos con rutas de la zona...', 'info');
+                const techs = [];
+                for(let i=0; i<10; i++) {
+                    const docRef = db.collection('users').doc();
+                    const name = nombres[i % nombres.length];
+                    const route = rutas[i % rutas.length];
+                    const email = `tech.riviera${i+1}@tba.com`;
+                    const data = {
+                        name, email, route,
+                        role: 'tech',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    };
+                    await docRef.set(data);
+                    techs.push({id: docRef.id, name, route});
+                }
+
+                log('Creando 30 albercas residenciales en Riviera Veracruzana...', 'info');
+                const pools = [];
+                for(let i=0; i<30; i++) {
+                    const resName = residenciales[i % residenciales.length];
+                    const poolName = `Alberca ${resName} - Lote ${Math.floor(Math.random()*200)+1}`;
+                    const route = rutas[i % rutas.length];
+                    const filter = filtros[Math.floor(Math.random()*filtros.length)];
+                    
+                    // Coordenadas Riviera Veracruzana (aprox)
+                    const lat = (19.05 + (Math.random() * 0.05)).toFixed(6);
+                    const lng = (-96.08 + (Math.random() * 0.04)).toFixed(6);
+
+                    const poolData = {
+                        name: poolName,
+                        route,
+                        filterType: filter,
+                        volume: (Math.floor(Math.random()*60)+20) * 1000,
+                        lat, lng,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    };
+                    const doc = await db.collection('pools').add(poolData);
+                    pools.push({id: doc.id, name: poolName, route, lat, lng});
+                }
+
+                log('Generando 40 reportes históricos (últimos 3 días)...', 'info');
+                const states = ["optimal", "optimal", "optimal", "warning", "alert"];
+                for(let i=0; i<40; i++) {
+                    const tech = techs[Math.floor(Math.random()*techs.length)];
+                    const pool = pools[Math.floor(Math.random()*pools.length)];
+                    const status = states[Math.floor(Math.random()*states.length)];
+                    const date = new Date();
+                    date.setDate(date.getDate() - Math.floor(Math.random()*3));
+                    date.setHours(Math.floor(Math.random()*8)+8);
+
+                    await db.collection('reports').add({
+                        techId: tech.id, techName: tech.name,
+                        poolId: pool.id, poolName: pool.name,
+                        techRoute: tech.route,
+                        ph: (Math.random() * (7.6 - 7.0) + 7.0).toFixed(1),
+                        cl: (Math.random() * (4.0 - 1.5) + 1.5).toFixed(1),
+                        status: status,
+                        hasAlert: status === 'alert',
+                        alertType: status === 'alert' ? 'Bomba Ruidosa' : '',
+                        timestamp: firebase.firestore.Timestamp.fromDate(date),
+                        dateId: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+                    });
+                }
+
+                log('🎉 INYECCIÓN RIVIERA VERACRUZANA COMPLETADA.', 'info');
+                btn.innerText = 'Carga Exitosa';
+            } catch (e) { log('Error: ' + e.message, 'err'); console.error(e); }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TBA Command Center · Panel Operativo</title>
+    <link rel="stylesheet" href="css/style.css?v=3">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
+</head>
+<body class="admin-body">
+
+    <div class="full-loader" id="full-loader">
+        <div class="loader-ring"></div>
+        <p>Conectando con la nube...</p>
+    </div>
+
+    <div class="admin-layout" id="admin-app" style="display:none;">
+        
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-logo">
+                <i data-lucide="droplets" class="icon-lg"></i>
+                <div>
+                    <h2>TBA</h2>
+                    <p>Command Center</p>
+                </div>
+            </div>
+            <ul class="sidebar-menu">
+                <li class="active" data-section="dashboard"><i data-lucide="layout-dashboard"></i> Dashboard</li>
+                <li data-section="pools"><i data-lucide="waves"></i> Albercas</li>
+                <li data-section="team"><i data-lucide="users"></i> Técnicos</li>
+            </ul>
+            <div class="sidebar-footer">
+                <div class="admin-user">
+                    <div class="admin-avatar">R</div>
+                    <div>
+                        <p class="admin-name" id="admin-name">Admin</p>
+                        <p class="admin-role">Administrador</p>
+                    </div>
+                </div>
+                <button class="btn-icon-sm" id="btn-admin-logout"><i data-lucide="log-out"></i></button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            
+            <!-- Top Bar -->
+            <div class="topbar">
+                <div>
+                    <h1 id="page-title">Dashboard Operativo</h1>
+                    <p class="text-muted" id="today-date"></p>
+                </div>
+                <div class="topbar-actions">
+                    <button class="btn-outline" id="btn-tour-1" style="border-color: #4facfe; color: #4facfe;">
+                        <i data-lucide="play-circle"></i> Tour Operativo
+                    </button>
+                    <button class="btn-outline" id="btn-tour-2" style="border-color: #ffb86c; color: #ffb86c;">
+                        <i data-lucide="sparkles"></i> Tour Avanzado
+                    </button>
+                    <button class="btn-outline" id="btn-export-csv" style="display: none;">
+                        <i data-lucide="download"></i> Exportar
+                    </button>
+                    <button class="btn-outline btn-wa-export" id="btn-wa-summary">
+                        <i data-lucide="message-circle"></i> Resumen a WA
+                    </button>
+                </div>
+            </div>
+
+            <!-- SECTION: Dashboard -->
+            <section class="content-section active" id="section-dashboard">
+                
+                <div class="stats-row">
+                    <div class="stat-card accent-blue">
+                        <div class="stat-icon-wrap"><i data-lucide="check-circle-2"></i></div>
+                        <div>
+                            <p class="stat-label">Servicios Completados</p>
+                            <h3 class="stat-value"><span id="s-completed">0</span> <small id="s-total">/ 0</small></h3>
+                        </div>
+                    </div>
+                    <div class="stat-card accent-green">
+                        <div class="stat-icon-wrap"><i data-lucide="users"></i></div>
+                        <div>
+                            <p class="stat-label">Técnicos Activos</p>
+                            <h3 class="stat-value" id="s-techs">0</h3>
+                        </div>
+                    </div>
+                    <div class="stat-card accent-amber">
+                        <div class="stat-icon-wrap"><i data-lucide="alert-triangle"></i></div>
+                        <div>
+                            <p class="stat-label">Alertas Activas</p>
+                            <h3 class="stat-value" id="s-alerts">0</h3>
+                        </div>
+                    </div>
+                    <div class="stat-card accent-purple">
+                        <div class="stat-icon-wrap"><i data-lucide="droplets"></i></div>
+                        <div>
+                            <p class="stat-label">Albercas Registradas</p>
+                            <h3 class="stat-value" id="s-pools">0</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Reports -->
+                <div class="panel-card">
+                    <div class="panel-card-header">
+                        <h3><i data-lucide="activity"></i> Reportes en Tiempo Real <span class="live-dot"></span></h3>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Alberca</th>
+                                    <th>Técnico</th>
+                                    <th>Check-in</th>
+                                    <th>Check-out</th>
+                                    <th>Duración</th>
+                                    <th>pH</th>
+                                    <th>Cloro</th>
+                                    <th>Insumo</th>
+                                    <th>Estatus</th>
+                                </tr>
+                            </thead>
+                            <tbody id="live-reports-body">
+                                <tr class="empty-row"><td colspan="9" class="text-center text-muted">Esperando reportes...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Active Check-ins -->
+                <div class="panel-card" style="margin-top: 24px;">
+                    <div class="panel-card-header">
+                        <h3><i data-lucide="map-pin"></i> Técnicos en Campo Ahora <span class="live-dot"></span></h3>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Técnico</th>
+                                    <th>Alberca</th>
+                                    <th>Hora de Llegada</th>
+                                    <th>Tiempo en Sitio</th>
+                                </tr>
+                            </thead>
+                            <tbody id="active-checkins-body">
+                                <tr class="empty-row"><td colspan="4" class="text-center text-muted">Ningún técnico en campo.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION: Albercas -->
+            <section class="content-section" id="section-pools">
+                <div class="panel-card">
+                    <div class="panel-card-header">
+                        <h3><i data-lucide="waves"></i> Registro de Albercas</h3>
+                        <div class="header-actions">
+                            <button class="btn-outline btn-sm" id="btn-export-pools"><i data-lucide="download"></i> Exportar</button>
+                            <button class="btn-primary-sm" id="btn-add-pool"><i data-lucide="plus"></i> Agregar</button>
+                        </div>
+                    </div>
+                    <!-- FILTROS DE ALBERCAS -->
+                    <div class="filter-bar" id="pool-filters">
+                        <div class="filter-group">
+                            <i data-lucide="search" class="filter-icon"></i>
+                            <input type="text" id="filter-pool-search" placeholder="Buscar por nombre...">
+                        </div>
+                        <div class="filter-group">
+                            <select id="filter-pool-route">
+                                <option value="">Todas las Rutas</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <select id="filter-pool-filter-type">
+                                <option value="">Todos los Filtros</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <select id="filter-pool-volume">
+                                <option value="">Todo Volumen</option>
+                                <option value="small">Hasta 30,000 Lts</option>
+                                <option value="medium">30,001 - 80,000 Lts</option>
+                                <option value="large">Más de 80,000 Lts</option>
+                            </select>
+                        </div>
+                        <button class="btn-clear-filters" id="btn-clear-pool-filters"><i data-lucide="x"></i> Limpiar</button>
+                    </div>
+                    <div class="filter-results" id="pool-filter-results"></div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Ubicación</th>
+                                    <th>Ruta</th>
+                                    <th>Tipo Filtro</th>
+                                    <th>Volumen</th>
+                                    <th>Últ. Servicio</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pools-table-body">
+                                <tr class="empty-row"><td colspan="6" class="text-center text-muted">Sin albercas registradas</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION: Técnicos -->
+            <section class="content-section" id="section-team">
+                <div class="panel-card">
+                    <div class="panel-card-header">
+                        <h3><i data-lucide="users"></i> Equipo Técnico</h3>
+                        <div class="header-actions">
+                            <button class="btn-outline btn-sm" id="btn-export-techs"><i data-lucide="download"></i> Exportar</button>
+                            <button class="btn-primary-sm" id="btn-add-tech"><i data-lucide="plus"></i> Agregar Técnico</button>
+                        </div>
+                    </div>
+                    <!-- FILTROS DE TÉCNICOS -->
+                    <div class="filter-bar" id="tech-filters">
+                        <div class="filter-group">
+                            <i data-lucide="search" class="filter-icon"></i>
+                            <input type="text" id="filter-tech-search" placeholder="Buscar por nombre...">
+                        </div>
+                        <div class="filter-group">
+                            <select id="filter-tech-route">
+                                <option value="">Todas las Rutas</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <select id="filter-tech-role">
+                                <option value="">Todos los Roles</option>
+                                <option value="tech">Técnico</option>
+                                <option value="admin">Administrador</option>
+                            </select>
+                        </div>
+                        <button class="btn-clear-filters" id="btn-clear-tech-filters"><i data-lucide="x"></i> Limpiar</button>
+                    </div>
+                    <div class="filter-results" id="tech-filter-results"></div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Email</th>
+                                    <th>Ruta Asignada</th>
+                                    <th>Rol</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="team-table-body">
+                                <tr class="empty-row"><td colspan="5" class="text-center text-muted">Sin técnicos registrados</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Modal Agregar Alberca -->
+    <div class="modal-overlay-admin" id="modal-add-pool">
+        <div class="modal-admin-card">
+            <div class="modal-admin-head">
+                <h3 id="modal-pool-title">Agregar Alberca</h3>
+                <button class="btn-close-modal" data-close="modal-add-pool"><i data-lucide="x"></i></button>
+            </div>
+            <form id="form-add-pool">
+                <input type="hidden" id="edit-pool-id">
+                <div class="form-row">
+                    <div class="form-group"><label>Nombre / Ubicación</label><input type="text" id="pool-name" required placeholder="Ej: Residencial La Joya #45"></div>
+                    <div class="form-group"><label>Ruta Asignada</label><input type="text" id="pool-route" required placeholder="Ej: Ruta Norte 1"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Tipo de Filtro</label>
+                        <select id="pool-filter">
+                            <option>MAXFIL-250</option><option>MAXFIL-500</option>
+                            <option>Filtro de Arena (Genérico)</option><option>Filtro de Cartucho</option>
+                            <option>Sistema Hidroneumático</option><option>Otro</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Volumen (Litros)</label><input type="number" id="pool-volume" placeholder="Ej: 40000"></div>
+                </div>
+                <button type="submit" class="btn-primary-full" id="btn-pool-submit">Guardar Alberca</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Agregar/Editar Técnico -->
+    <div class="modal-overlay-admin" id="modal-add-tech">
+        <div class="modal-admin-card">
+            <div class="modal-admin-head">
+                <h3 id="modal-tech-title">Registrar Técnico</h3>
+                <button class="btn-close-modal" data-close="modal-add-tech"><i data-lucide="x"></i></button>
+            </div>
+            <form id="form-add-tech">
+                <input type="hidden" id="edit-tech-uid">
+                <div class="form-row">
+                    <div class="form-group"><label>Nombre Completo</label><input type="text" id="tech-name" required placeholder="Ej: Roberto López"></div>
+                    <div class="form-group"><label>Email (Login)</label><input type="email" id="tech-email" required placeholder="Ej: roberto@tba.com"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group" id="pass-group"><label>Contraseña Inicial</label><input type="text" id="tech-pass" placeholder="Ej: tba2026" minlength="6"></div>
+                    <div class="form-group"><label>Ruta Asignada</label><input type="text" id="tech-route" required placeholder="Ej: Ruta Norte 1"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Rol</label>
+                        <select id="tech-role"><option value="tech">Técnico</option><option value="admin">Administrador</option></select>
+                    </div>
+                    <div class="form-group"></div>
+                </div>
+                <button type="submit" class="btn-primary-full" id="btn-tech-submit">Registrar Técnico</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"><i data-lucide="check-circle-2"></i><span id="toast-msg">Guardado</span></div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/admin-app.js?v=2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
+    <script src="js/tour.js?v=3"></script>
+</body>
+</html>
