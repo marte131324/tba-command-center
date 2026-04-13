@@ -93,9 +93,21 @@ document.addEventListener('DOMContentLoaded', () => {
         setupRealtimeSync();
         listenToTasks();
 
-        loader.style.display = 'none';
-        app.style.display = 'block';
-        lucide.createIcons();
+        // Retraso cinemático de 5 segundos para el Splash de Co-Branding
+        setTimeout(() => {
+            if(loader) {
+                loader.style.transition = 'opacity 0.8s ease';
+                loader.style.opacity = '0';
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                    app.style.display = 'block';
+                    lucide.createIcons();
+                }, 800);
+            } else {
+                app.style.display = 'block';
+                lucide.createIcons();
+            }
+        }, 5000);
     });
 
     // =========================================
